@@ -97,6 +97,18 @@ class Blockchain(object):
         guess_hash = hashlib.sha256(guess).hexdigest()
         return guess_hash[:6] == "000000"
 ​
+    def new_transaction(self, sender, recipient, amount):
+        # Create a method in the `Blockchain` class called `new_transaction`
+        # that adds a new transaction to the list of transactions:
+        # :param sender: <str> Address of the Recipient
+        # :param recipient: <str> Address of the Recipient
+        # :param amount: <int> Amount
+        # :return: <int> The index of the `block` that will hold this transaction
+        newTrans = {'sender': sender, 'recipient': recipient,
+            'amount': amount, 'index': self.chain[-1]['index']}
+
+        self.current_transactions.append(newTrans)
+        return newTrans
 ​
 # Instantiate our Node
 app = Flask(__name__)
@@ -110,6 +122,13 @@ blockchain = Blockchain()
 ​
 @app.route('/mine', methods=['POST'])
 def mine():
+    # Modify the `mine` endpoint to create a reward via a `new_transaction`
+    # for mining a block:
+
+    # * The sender is "0" to signify that this node created a new coin
+    # * The recipient is the id of the miner
+    # * The amount is 1 coin as a reward for mining the next block
+
     values = request.get_json()
     required = ['proof', 'id']
 
@@ -165,7 +184,26 @@ def last_block():
         'last_block': blockchain.last_block
     }
     return jsonify(response), 200
+
+@app.route('/transactions/new', methods=['POST'])
+def transaction():
+    #     * use `request.get_json()` to pull the data out of the POST
+    # * check that 'sender', 'recipient', and 'amount' are present
+    #     * return a 400 error using `jsonify(response)` with a 'message'
+    # * upon success, return a 'message' indicating index of the block
+    #   containing the transaction
+​    values = request.get_json()
+
+    required = ['sender', 'recipient', 'amount']
+
+    if not all(k in values for k in required):
+        response = {'message': "Missing Values"}
+        return jsonify(response), 400
 ​
+    else:
+        index = str(blockchain.chain[-1]['index'])
+        response = {'message': "transaction sent", index}
+        return jsonify(response), 200
 ​
 ​
 # Run the program on port 5000
